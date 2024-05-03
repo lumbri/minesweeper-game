@@ -5,9 +5,12 @@ const CHEAT_REVEAL_ALL = false;
 
 const ROWS_COUNT = 10;
 const COLS_COUNT = 10;
+const BOMBS_COUNT = 10;
 
 var defeat = false;
 var victory = false;
+var revealedCount = 0;
+var flagsCount = 0;
 
 // Cell constructor
 function Cell() {
@@ -27,15 +30,20 @@ for (var row = 0; row < ROWS_COUNT; row++) {
 
 //
 // TODO: Task 1 - add some bombs at fixed positions.
-// cells[0][1].isBomb = true;
-// cells[5][4].isBomb = true;
-// cells[9][9].isBomb = true;
+//cells[0][1].isBomb = true;
+//cells[5][4].isBomb = true;
+//cells[9][9].isBomb = true;
 
 //
 // TODO: Task 2 - Comment out the code of task 1. Instead of adding bombs in fixed places, add 10 of them in random places.
 //                Add a BOMBS_COUNT constant so that you can easily change the amount of bombs placed. Put it next to the
 //                other constants.
 //
+for (var i = 0; i < BOMBS_COUNT; i++) {
+  var row = Math.floor(Math.random() * ROWS_COUNT);
+  var col = Math.floor(Math.random() * COLS_COUNT);
+  cells[row][col].isBomb = true;
+}
 
 
 // Once the game has been initialized, we "render" it.
@@ -47,6 +55,23 @@ render();
 //
 
 function discoverCell(row, col) {
+  
+  var cell = cells[row][col];
+  if (cell.hasBeenFlagged || cell.discovered) {
+    return;
+  }
+  cell.discovered = true;
+  if (cell.isBomb) {
+    defeat = true;
+    return;
+  }
+  if (countAdjacentBombs(row, col) === 0) {
+    for (var i = Math.max(0, row - 1); i <= Math.min(row + 1, ROWS_COUNT - 1); i++) {
+      for (var j = Math.max(0, col - 1); j <= Math.min(col + 1, COLS_COUNT - 1); j++) {
+        discoverCell(i, j);
+      }
+    }
+  }
   //
   // TODO: Task 5 - Reveal cells when clicked.
   //
@@ -61,6 +86,11 @@ function discoverCell(row, col) {
 }
 
 function flagCell(row, col) {
+  var cell = cells[row][col];
+  if (cell.discovered) {
+    return;
+  }
+  cell.hasBeenFlagged = !cell.hasBeenFlagged;
   //
   // TODO: Task 7 - Implement flags. Flags allow the player to mark cells that they think contain a bomb.
   //                When clicking a cell and holding shift, function flagCell() will be called for you.
@@ -70,40 +100,75 @@ function flagCell(row, col) {
 // This function is called once for each cell when rendering the game. The row and col of the current cell is
 // passed to the functionn
 function countAdjacentBombs(row, col) {
-  //
+ {
+  var count = 0;
+  for (var i = Math.max(0, row - 1); i <= Math.min(row + 1, ROWS_COUNT - 1); i++) {
+    for (var j = Math.max(0, col - 1); j <= Math.min(col + 1, COLS_COUNT - 1); j++) {
+      if (!(i === row && j === col) && cells[i][j].isBomb) {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
   // TODO: Task 4 - Adjacent bombs are bombs in cells touching our cell (also diagonally). Implement this function
   //                so that it returns the count of adjacent cells with bombs in them. 
   //
-  return 1;
+ /* return 1;*/
 }
 
 function getBombsCount() {
+  var count = 0;
+  for (var row = 0; row < ROWS_COUNT; row++) {
+    for (var col = 0; col < COLS_COUNT; col++) {
+      if (cells[row][col].isBomb) {
+        count++;
+      }
+    }
+  }
+  return count;
   //
   // TODO: Task 9 - Implement stats: the counters currently always display 0, calculate and return the relevant values.
   //
-  return 0;
+  //return 0;
 }
 
 function getClearedCells() {
+  var count = 0;
+  for (var row = 0; row < ROWS_COUNT; row++) {
+    for (var col = 0; col < COLS_COUNT; col++) {
+      if (cells[row][col].discovered) {
+        count++;
+      }
+    }
+  }
+  return count;
   //
   // TODO: Task 9 - Implement stats: the counters currently always display 0, calculate and return the relevant values.
   //
-  return 0;
+  //return 0;
 }
 
 function getTotalCellsToClear() {
+  return ROWS_COUNT * COLS_COUNT - BOMBS_COUNT;
   //
   // TODO: Task 9 - Implement stats: the counters currently always display 0, calculate and return the relevant values.
   //
-  return 0;
+  //return 0;
 }
 
 function checkForVictory() {
+  var clearedCells = getClearedCells();
+  var totalCells = getTotalCellsToClear();
+  if (clearedCells === totalCells) {
+    victory = true;
+  }
   //
   // TODO: Task 10 - Implement victory. If the player has revealed as many cells as they must (every cell that isn't a
   //                 bomb), set variable victory to true.
   //
-  return 0;
+  //return 0;
 }
 
 //
